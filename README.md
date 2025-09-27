@@ -1,28 +1,39 @@
-# Activerecord::IntervalReconnect
+# ActiveRecord::IntervalReconnect
 
-TODO: Delete this and the text below, and describe your gem
+ActiveRecord extension to reconnect connections at a fixed interval.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/activerecord/interval_reconnect`. To experiment with that code, run `bin/console` for an interactive prompt.
+Provides interval-based reconnection for ActiveRecord connections. Helps handle RDS failover scenarios by periodically refreshing connections on checkout.
 
 ## Installation
-
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
 
 Install the gem and add to the application's Gemfile by executing:
 
 ```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+bundle add activerecord-interval_reconnect
 ```
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
 ```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+gem install activerecord-interval_reconnect
 ```
 
 ## Usage
 
-TODO: Write usage instructions here
+Add reconnection_interval to a connection configuration in database.yml. When a connection is checked out from the pool, ActiveRecord will reconnect if the specified number of seconds has passed since the last reconnect.
+
+```
+default: &default
+  adapter: sqlite3
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+  reconnection_interval: 15
+```
+
+In this example, if more than 15 seconds have elapsed since the last reconnect, the next checkout will trigger `reconnect!`. If `reconnection_interval` is not specified, nothing happens.
+
+- Reconnection only occurs on checkout, so it will not interrupt an ongoing transaction.
+- If you have multiple database connections, only those with `reconnection_interaval` set are affected.
 
 ## Development
 
@@ -32,7 +43,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/activerecord-interval_reconnect.
+Bug reports and pull requests are welcome on GitHub at https://github.com/kozy4324/activerecord-interval_reconnect.
 
 ## License
 
